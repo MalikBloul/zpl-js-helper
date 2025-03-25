@@ -1,2 +1,2 @@
-export type FontFamily =  "C" | "0"
+export type FontFamily =  "C" | "0" | "A"
    

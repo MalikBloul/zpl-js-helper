@@ -17,16 +17,21 @@ export class LabelBuilder {
       const setup = `^PW${this.template.size.widthInDots.toString()}\r\n^LL${this.template.size.heightInDots.toString()}\r\n`;
       const end = '^XZ';
   
-      let content = '';
+      let zplCode = '';
   
       this.records.forEach((record) => {
+        
         // Apply each record to the sections of the template and generate ZPL
-        content += this.template.getSections()
+        const content = this.template.getSections()
           .map((section) => this.generateSectionZPL(section, record))
           .join('\r\n');
+
+        const zplCodeForSection = start + setup + content + end;
+
+        zplCode += zplCodeForSection;
       });
   
-      return start + setup + content + end;
+      return zplCode;
     }
   
     // Method to generate ZPL for each section based on the current record

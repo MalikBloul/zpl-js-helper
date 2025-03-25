@@ -15,8 +15,8 @@ export class TextSection implements SectionComponent {
   border: string;
   borderThickness: number;
   orientation: "portrait" | "landscape";
-  defaultFontSize: 10 | 20 | 30 | 40 | 50 = 30;
-  textAlignment: 'J' | 'L' | 'C' | 'R';
+  defaultFontSize: number = 30;
+  textAlignment: "J" | "L" | "C" | "R";
 
   // Constructor with parameters for all the properties
   constructor(
@@ -27,9 +27,9 @@ export class TextSection implements SectionComponent {
     border: string = "none", // Defaulting to 'none' if no border is specified
     borderThickness: number = 2, // Default border thickness is 2
     padding: Padding = new Padding(0, 0, 0, 0),
-    orientation: "portrait" | "landscape" = 'portrait',
-    textAlignment: 'J' | 'L' | 'C' | 'R' = 'J', 
-    fontSize: 10 | 20 | 30 | 40 | 50 = 30
+    orientation: "portrait" | "landscape" = "portrait",
+    textAlignment: "J" | "L" | "C" | "R" = "J",
+    fontSize: number = 30
   ) {
     this.fontFamily = fontFamily;
     this.padding = padding;
@@ -91,12 +91,10 @@ export class TextSection implements SectionComponent {
   }
 
   private generateText(values: string[] = []) {
-
-    if(values.length === 0){
+    if (values.length === 0) {
       return "";
     }
 
-       
     let zpl =
       this.orientation == "landscape"
         ? "^CI28\r\n^FWB\r\n"
@@ -110,17 +108,21 @@ export class TextSection implements SectionComponent {
     const availableWidth =
       this.orientation == "landscape" ? totalLengthY : totalLengthX;
 
-    //const textLines: string[]= this.processText(values, availableWidth); 
-    const result = this.processTextUpdated(values, availableWidth, this.defaultFontSize)
+    //const textLines: string[]= this.processText(values, availableWidth);
+    const result = this.processTextUpdated(
+      values,
+      availableWidth,
+      this.defaultFontSize
+    );
     const textLines = result.lines;
     const adjustedFontSize = result.fontSize;
 
     const fontSize = Math.min(
       adjustedFontSize,
-      Math.floor((availableHeight)  / textLines.length)
+      Math.floor(availableHeight / textLines.length)
     );
 
-    const textAlignmentEscape = this.textAlignment == 'C' ? '\\&' : '';
+    const textAlignmentEscape = this.textAlignment == "C" ? "\\&" : "";
 
     for (let i = 0; i < textLines.length; i++) {
       const textOriginX =
@@ -134,11 +136,13 @@ export class TextSection implements SectionComponent {
           : i * fontSize + this.padding.top + this.origin.originYInDots;
 
       zpl += `^FO ${textOriginX},${textOriginY}\r\n
-        ^A${this.fontFamily.toString()},${fontSize},${
-        this.fontFamily == "0" ? fontSize : 0
+        ^A${this.fontFamily.toString()},${fontSize} ${
+        this.fontFamily == "0" ? "," + fontSize.toString() : ""
       }\r\n
-        ^FB${this.orientation == "landscape" ? totalLengthY : totalLengthX},,3,${this.textAlignment}
-        ^FD${textLines[i]}${textAlignmentEscape}^FS\r\n`; 
+        ^FB${
+          this.orientation == "landscape" ? totalLengthY : totalLengthX
+        },,5,${this.textAlignment}
+        ^FD${textLines[i]}${textAlignmentEscape}^FS\r\n`;
     }
 
     return zpl;
@@ -147,34 +151,39 @@ export class TextSection implements SectionComponent {
   private processText(text: string[], availableWidth: number): string[] {
     const processedLines: string[] = [];
 
-    const scaleFactor = this.fontFamily == '0' ? 2: 1.25;
+    const scaleFactor = this.fontFamily == "0" ? 2 : 1.25;
     text.forEach((line) => {
       const words = line.split(" ");
       let currentLine = "";
 
       words.forEach((word) => {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          console.log(`Available Width: ${availableWidth}\n Testline: ${testLine}\n Testline width: ${this.calculateStringLengthRelativeToCharacters(testLine) * this.defaultFontSize}`)
-          if (this.calculateStringLengthRelativeToCharacters(testLine) * (this.defaultFontSize / scaleFactor) <= availableWidth) {
-              // Add the word to the current line if it fits
-              currentLine = testLine;
-          } else {
-              // If the word doesn't fit, push the current line and start a new one
-              if (currentLine) processedLines.push(currentLine);
-              currentLine = word; // Start a new line with the word
-          }
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        console.log(
+          `Available Width: ${availableWidth}\n Testline: ${testLine}\n Testline width: ${
+            this.calculateStringLengthRelativeToCharacters(testLine) *
+            this.defaultFontSize
+          }`
+        );
+        if (
+          this.calculateStringLengthRelativeToCharacters(testLine) *
+            (this.defaultFontSize / scaleFactor) <=
+          availableWidth
+        ) {
+          // Add the word to the current line if it fits
+          currentLine = testLine;
+        } else {
+          // If the word doesn't fit, push the current line and start a new one
+          if (currentLine) processedLines.push(currentLine);
+          currentLine = word; // Start a new line with the word
+        }
       });
 
       // Push any remaining text
       if (currentLine) processedLines.push(currentLine);
-  });
+    });
 
-  return processedLines;
-}
-  
-
-
-  
+    return processedLines;
+  }
 
   private calculateStringLengthRelativeToCharacters(text: string): number {
     // Define wide and skinny characters
@@ -286,55 +295,82 @@ export class TextSection implements SectionComponent {
     return relativeStringLength / 192;
   }
 
-
-  private processTextUpdated(lines: string[], availableWidth: number, desiredFontSize: number): {lines: string[], fontSize: number} {
+  private processTextUpdated(
+    lines: string[],
+    availableWidth: number,
+    desiredFontSize: number
+  ): { lines: string[]; fontSize: number } {
     let fontSize = desiredFontSize;
-    const minFontSize = this.fontFamily == '0' ? 20 : 20;
-    const scaleFactor = this.fontFamily == '0' ? 2: 1.25;
+    const minFontSize = this.fontFamily == "0" ? 20 : 20;
+    const scaleFactor =
+      this.fontFamily == "0" ? 2 : this.fontFamily == "C" ? 1.25 : 1.25;
     // Try to fit text by reducing font size first
-    let maxLineWidth = Math.max(...lines.map(line => this.calculateStringLengthRelativeToCharacters(line) * (fontSize / scaleFactor)));
+    let maxLineWidth = Math.max(
+      ...lines.map(
+        (line) =>
+          this.calculateStringLengthRelativeToCharacters(line) *
+          (fontSize / scaleFactor)
+      )
+    );
 
-    console.log(lines, maxLineWidth, availableWidth)
+    console.log(lines, maxLineWidth, availableWidth);
 
     while (maxLineWidth > availableWidth && fontSize > minFontSize) {
-        fontSize -= 1; // Reduce font size
-        maxLineWidth = Math.max(...lines.map(line => this.calculateStringLengthRelativeToCharacters(line) * (fontSize / scaleFactor)));
+      fontSize -= 1; // Reduce font size
+      maxLineWidth = Math.max(
+        ...lines.map(
+          (line) =>
+            this.calculateStringLengthRelativeToCharacters(line) *
+            (fontSize / scaleFactor)
+        )
+      );
     }
 
     // If the font size reaches the minimum and still doesn't fit, break lines up using the min fontsize;
     if (fontSize <= minFontSize && maxLineWidth > availableWidth) {
-        lines = this.breakUpLines(lines, availableWidth, minFontSize, scaleFactor);
+      lines = this.breakUpLines(
+        lines,
+        availableWidth,
+        minFontSize,
+        scaleFactor
+      );
     }
 
-    return {lines, fontSize};
-}
+    return { lines, fontSize };
+  }
 
-private breakUpLines(lines: string[], availableWidth: number, fontSize: number, scaleFactor: number): string[] {
- 
-  const processedLines: string[] = []
-  lines.forEach((line) => {
-    const words = line.split(" ");
-    let currentLine = "";
+  private breakUpLines(
+    lines: string[],
+    availableWidth: number,
+    fontSize: number,
+    scaleFactor: number
+  ): string[] {
+    const processedLines: string[] = [];
+    lines.forEach((line) => {
+      const words = line.split(" ");
+      let currentLine = "";
 
-    words.forEach((word) => {
+      words.forEach((word) => {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
-        
-        if (this.calculateStringLengthRelativeToCharacters(testLine) * (fontSize / scaleFactor) <= availableWidth) {
-            // Add the word to the current line if it fits
-            currentLine = testLine;
+
+        if (
+          this.calculateStringLengthRelativeToCharacters(testLine) *
+            (fontSize / scaleFactor) <=
+          availableWidth
+        ) {
+          // Add the word to the current line if it fits
+          currentLine = testLine;
         } else {
-            // If the word doesn't fit, push the current line and start a new one
-            if (currentLine) processedLines.push(currentLine);
-            currentLine = word; // Start a new line with the word
+          // If the word doesn't fit, push the current line and start a new one
+          if (currentLine) processedLines.push(currentLine);
+          currentLine = word; // Start a new line with the word
         }
+      });
+
+      // Push any remaining text
+      if (currentLine) processedLines.push(currentLine);
     });
 
-    // Push any remaining text
-    if (currentLine) processedLines.push(currentLine);
-    
-    
-  })
-
-  return processedLines;
-}
+    return processedLines;
+  }
 }

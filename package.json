@@ -1,12 +1,23 @@
 {
   "name": "zpl-js-helper",
-  "version": "0.0.1",
+  "version": "0.0.123",
   "description": "A package that is intended to help with the creation of ZPL labels and templates using JS, with scalable text sizes to prevent overflow and overlap of text.",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
-    "build" : "tsup",
+    "build" : "tsup src/index.ts --format cjs,esm --dts --clean --sourcemap",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
